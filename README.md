@@ -4,7 +4,7 @@ Utility functions for that live here.   See sphvoronoi.py.
 
 Dependencies: pyhull, numpy, optionally igraph.
 
-sphvoronoi.py takes a set of points on the unit sphere, uses pyhull to construct spherical Voronoi cells, writes some summary information and a graphical model in a partiview-format voronoi.speck file.
+sphvoronoi.py takes a set of points on the unit sphere, uses pyhull to construct spherical Voronoi cells, writes some summary information and a graphical model in a [partiview](https://git.ncsa.illinois.edu/slevy/partiview)-format voronoi.speck file.
 
 Usage:
     python3 sphvoronoi.py 77
