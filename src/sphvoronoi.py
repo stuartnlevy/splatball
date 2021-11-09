@@ -341,6 +341,32 @@ def readpts( infile ):
 ###
 # main
 
+def How_To_Use( points ):
+    
+    # Use joggle=True to ensure that every convex-hull facet is a triangle.
+    # Otherwise, if >=4 points appeared to be coplanar, we might get some quadrilateral-or-bigger polys.
+
+    hull = pyhull.convex_hull.ConvexHull( points, joggle=True )
+
+    enet = EdgeNet( hull )
+
+    npoints = len(points)
+
+    for vno in range(npoints):
+
+        tfm4 = enet.findcentertfm( vno, on_facet=True )
+
+        # tfm4 is a 4x4 numpy array representing a transformation matrix
+        #  from the unit disk in the XY plane (-1 <= x <= 1, -1 <= y <= 1, z near zero)
+        #  to the facet
+        # intended to be applied as in, if you have a mostly-XY point in the form
+        #   picturepoint = [x, y, z, 1]
+        # then the 3D-on-spherical-facet location is
+        #   p3d = numpy.dot( picturepoint, tfm4 )
+        # where p3d will look like
+        #   [X3D, Y3D, Z3D, 1] 
+    
+
 if __name__ == "__main__":
 
     ii = 1
