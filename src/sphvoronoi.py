@@ -87,7 +87,7 @@ def linedistance( p, pa, pb ):
     fromline = va - numpy.dot(va,uline) * uline
     return vmag(fromline)
 
-class EdgeNet(object):
+class HullNet(object):
 
     class OriEdge(object):
         def __init__(self, v0, v1, vother, facet01):
@@ -211,15 +211,19 @@ class EdgeNet(object):
         return normmid, normspan
         
 
-    def __init__(self, hull):
+    def __init__(self, points):
+
+        # Use joggle=True to ensure that every convex-hull facet is a triangle.
+        # Otherwise, if >=4 points appeared to be coplanar, we might get some quadrilateral-or-bigger polys.
+
+        self.hull = pyhull.convex_hull.ConvexHull( points, joggle=True )
+
         self.edges = {}
         self.neighborset = {}
 
-        self.hull = hull
+        self.pts = numpy.array( points )
 
-        self.pts = numpy.array( hull.points )
-
-        for fno, (va,vb,vc) in enumerate( hull.vertices ):
+        for fno, (va,vb,vc) in enumerate( self.hull.vertices ):
             self.addedge(va, vb, vc, fno)
             self.addedge(vb, vc, va, fno)
             self.addedge(vc, va, vb, fno)
@@ -232,11 +236,6 @@ class EdgeNet(object):
         
 def voronoifaces(pts, diagfile=None):
 
-    # Use joggle=True to ensure that every convex-hull facet is a triangle.
-    # Otherwise, if >=4 points appeared to be coplanar, we might get some quadrilateral-or-bigger polys.
-
-    hull = pyhull.convex_hull.ConvexHull( pts, joggle=True )
-
     # hull.vertices is a list of (probably) 3-element lists, giving vertex indices of each facet in the convex hull. e.g.
     # [[2, 0, 3], [0, 4, 3], [4, 0, 2], [1, 2, 3], [4, 1, 3], [1, 4, 2]]
 
@@ -247,9 +246,9 @@ def voronoifaces(pts, diagfile=None):
     # 2->0 (facet 0), 2->4 (facet 1), 2->3 (facet 
 
 
-    enet = EdgeNet( hull )
+    hnet = HullNet( pts )
 
-    apts = enet.pts
+    apts = hnet.pts
 
 
     def dist(va,vb):
@@ -257,10 +256,10 @@ def voronoifaces(pts, diagfile=None):
 
     print("centers and neighbors")
     for vno in range(len(pts)):
-        nbs = enet.allneighbors(vno)
+        nbs = hnet.allneighbors(vno)
         dists = [dist(vno, nb) for nb in nbs]
-        vverts = enet.voronoiverts( vno )
-        normmid, normspan = enet.voronoinormal( vverts )
+        vverts = hnet.voronoiverts( vno )
+        normmid, normspan = hnet.voronoinormal( vverts )
         print("%3d [%5.3f .. %5.3f] ~%6.5f %2d:  %s" % (vno, min(dists), max(dists), max(normspan), len(nbs), " ".join(["%d" % nb for nb in nbs])))
 
     if diagfile is not None:
@@ -276,8 +275,8 @@ def voronoifaces(pts, diagfile=None):
 
             def putvoronoiedge(va, nb0, nb1):
                 pa = apts[va]
-                cen0 = enet.edges[(va,nb0)].circumcenter
-                cen1 = enet.edges[(va,nb1)].circumcenter
+                cen0 = hnet.edges[(va,nb0)].circumcenter
+                cen1 = hnet.edges[(va,nb1)].circumcenter
 
                 n = max( int(vdist(cen0,cen1) / maxskip)+2, 3 )
 
@@ -293,7 +292,7 @@ def voronoifaces(pts, diagfile=None):
             print("eval lum const 100", file=speckf)
             print("eval color va", file=speckf)
             for vno in range(len(pts)):
-                for nb in enet.allneighbors(vno):
+                for nb in hnet.allneighbors(vno):
                     puthalfedge( vno, nb )
 
             print("", file=speckf)
@@ -302,14 +301,14 @@ def voronoifaces(pts, diagfile=None):
             print("eval lum const 100", file=speckf)
             print("eval color vcell", file=speckf)
             for vno in range(len(pts)):
-                nbs = enet.allneighbors(vno)
+                nbs = hnet.allneighbors(vno)
                 for i in range(len(nbs)):
                     putvoronoiedge( vno, nbs[i], nbs[(i+1)%len(nbs)] )
 
             print("", file=speckf)
             print("object g3=facetpictures", file=speckf)
             for vno in range(len(pts)):
-                tfm4 = enet.findcentertfm(vno, on_facet=True)
+                tfm4 = hnet.findcentertfm(vno, on_facet=True)
                 # Here's the 4x4 transformation matrix for this point: tfm
                 stfm = "%g %g %g %g  %g %g %g %g  %g %g %g %g  %g %g %g %g" % tuple(tfm4.ravel())
 
@@ -320,7 +319,7 @@ def voronoifaces(pts, diagfile=None):
             ## print("", file=speckf)
             ## print("object g4=sphpictures", file=speckf)
             ## for vno in range(len(pts)):
-            ##     tfm4 = enet.findcentertfm(vno, on_facet=False)
+            ##     tfm4 = hnet.findcentertfm(vno, on_facet=False)
             ##     stfm = "%g %g %g %g  %g %g %g %g  %g %g %g %g  %g %g %g %g" % tuple(tfm4.ravel())
             ##     print("0 0 0 ellipsoid -c %d -r 1,1,0.05 -s wire %s" % (vno, stfm), file=speckf)
             ## print("eval alpha=1", file=speckf)
@@ -346,15 +345,13 @@ def How_To_Use( points ):
     # Use joggle=True to ensure that every convex-hull facet is a triangle.
     # Otherwise, if >=4 points appeared to be coplanar, we might get some quadrilateral-or-bigger polys.
 
-    hull = pyhull.convex_hull.ConvexHull( points, joggle=True )
-
-    enet = EdgeNet( hull )
+    hnet = HullNet( points )
 
     npoints = len(points)
 
     for vno in range(npoints):
 
-        tfm4 = enet.findcentertfm( vno, on_facet=True )
+        tfm4 = hnet.findcentertfm( vno, on_facet=True )
 
         # tfm4 is a 4x4 numpy array representing a transformation matrix
         #  from the unit disk in the XY plane (-1 <= x <= 1, -1 <= y <= 1, z near zero)
