@@ -342,9 +342,6 @@ def readpts( infile ):
 
 def How_To_Use( points ):
     
-    # Use joggle=True to ensure that every convex-hull facet is a triangle.
-    # Otherwise, if >=4 points appeared to be coplanar, we might get some quadrilateral-or-bigger polys.
-
     hnet = HullNet( points )
 
     npoints = len(points)
@@ -362,6 +359,11 @@ def How_To_Use( points ):
         #   p3d = numpy.dot( picturepoint, tfm4 )
         # where p3d will look like
         #   [X3D, Y3D, Z3D, 1] 
+
+        # or easier, with just plain 3-component points:
+        ppoint = [x, y, z]
+
+        ppoint_3d = numpy.dot( ppoint * tfm4[0:3, 0:3] ) +  tfm4[3, 0:3]
     
 
 if __name__ == "__main__":
