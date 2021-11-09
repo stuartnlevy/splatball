@@ -133,8 +133,6 @@ class EdgeNet(object):
 
         vorverts = self.voronoiverts( vno )
 
-        if len(self.neighborset[vno]) != len(vorverts):
-            print("Huh?   neighborset %d vorverts %d" % (len(self.neighborset[vno]), len(vorverts)))
         normmid, normspan = self.voronoinormal( vorverts )
         # over the span of normal-vectors on this facet,
         # normmid is the middle of the range, normalized to a unit vector.
@@ -155,7 +153,7 @@ class EdgeNet(object):
             vnormal = pcen
             radius = halfnear / howhigh
 
-        print("vno %d halfnear %.3f howhigh %g radius %.3f" % (vno, halfnear, howhigh, radius))
+        ## print("vno %d halfnear %.3f howhigh %g radius %.3f" % (vno, halfnear, howhigh, radius))
 
         tfm3 = basis( 3, 2,vnormal, 1,[0,0,1] )
 
@@ -312,17 +310,20 @@ def voronoifaces(pts, diagfile=None):
             print("object g3=facetpictures", file=speckf)
             for vno in range(len(pts)):
                 tfm4 = enet.findcentertfm(vno, on_facet=True)
+                # Here's the 4x4 transformation matrix for this point: tfm
                 stfm = "%g %g %g %g  %g %g %g %g  %g %g %g %g  %g %g %g %g" % tuple(tfm4.ravel())
+
                 print("0 0 0 ellipsoid -c %d -r 1,1,0.05 -s wire %s" % (vno, stfm), file=speckf)
             print("eval alpha=1", file=speckf)
 
-            print("", file=speckf)
-            print("object g4=sphpictures", file=speckf)
-            for vno in range(len(pts)):
-                tfm4 = enet.findcentertfm(vno, on_facet=False)
-                stfm = "%g %g %g %g  %g %g %g %g  %g %g %g %g  %g %g %g %g" % tuple(tfm4.ravel())
-                print("0 0 0 ellipsoid -c %d -r 1,1,0.05 -s wire %s" % (vno, stfm), file=speckf)
-            print("eval alpha=1", file=speckf)
+            # The on_facet=False case isn't working right yet...
+            ## print("", file=speckf)
+            ## print("object g4=sphpictures", file=speckf)
+            ## for vno in range(len(pts)):
+            ##     tfm4 = enet.findcentertfm(vno, on_facet=False)
+            ##     stfm = "%g %g %g %g  %g %g %g %g  %g %g %g %g  %g %g %g %g" % tuple(tfm4.ravel())
+            ##     print("0 0 0 ellipsoid -c %d -r 1,1,0.05 -s wire %s" % (vno, stfm), file=speckf)
+            ## print("eval alpha=1", file=speckf)
 
 
             print("", file=speckf)
