@@ -144,8 +144,21 @@ class HullNet(object):
         if on_facet:
             ## centerpoint = howhigh * normal
             ## radius = halfnear
-            centerpoint = numpy.mean( vorverts, axis=0 ) # howhigh * vnormal
             nvverts = len(vorverts)
+            # rough center.  Use below to compute more accurate centroid.
+            centerpoint = numpy.mean( vorverts, axis=0 ) # howhigh * vnormal
+            wsum = numpy.zeros(3)
+            wcensum = numpy.zeros(3)
+            for i in range(nvverts):
+                pa, pb = vorverts[i], vorverts[(i+1)%nvverts]
+                w = vmag( numpy.cross(pa-centerpoint, pb-centerpoint) )
+                wcensum += w * (centerpoint + pa + pb) / 3.0
+                wsum += w
+
+            # centroid -- area-weighted mean of centroids of individual triangles
+            # thanks to: https://math.stackexchange.com/questions/90463/how-can-i-calculate-the-centroid-of-polygon
+            centerpoint = wcensum / wsum
+                
             radius = min( [ linedistance(centerpoint, vorverts[i], vorverts[(i+1)%nvverts]) for i in range(nvverts) ] )
 
         else:
