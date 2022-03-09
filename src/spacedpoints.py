@@ -25,7 +25,7 @@ class SpacedPoints(object):
 
         self.curxy = None
 
-        self.nearthresh = 0.5
+        self.nearthresh = 0.4
 
         self.reportrate = 0
 
@@ -38,15 +38,16 @@ class SpacedPoints(object):
     def nudgepoints(self):
         try:
             # I can't get the minimizer (global or local) to stop when I want it to, so the minme() function keeps a count and raises a GoodEnoughException.
-            #results = scipy.optimize.basinhopping( SpacedPoints.minme, self.curxy, minimizer_kwargs=dict(method='bfgs', args=(self,)), niter=2 )
-            results = scipy.optimize.basinhopping( SpacedPoints.minme, self.curxy, minimizer_kwargs=dict(args=(self,)), niter=2 )
+            results = scipy.optimize.basinhopping( SpacedPoints.minme, self.curxy, minimizer_kwargs=dict(method='bfgs', args=(self,)), niter=2 )
+            #results = scipy.optimize.minimize( SpacedPoints.minme, self.curxy, args=(self,) )
+            #results = scipy.optimize.fmin( SpacedPoints.minme, self.curxy, xtol=0.005, ftol=0.005, args=(self,) )
 
         except GoodEnoughException:
             # timed out - use the best we've found so far
             return self.bestxyz()
 
-        # didn't time out - use the optimizer's final result
-        self.bestxy = results['x']
+        # didn't time out - use the optimizer's final result.  basinhopper() returns a dict, fmin() returns the xy vector itself.
+        self.bestxy = results['x'] if isinstance(results, dict) else results
         return self.bestxyz()
 
 
