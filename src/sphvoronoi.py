@@ -4,6 +4,8 @@ import sys, os
 import pyhull.convex_hull
 import numpy
 
+import spacedpoints
+
 try:
     import igraph
 except:
@@ -376,7 +378,9 @@ def How_To_Use( points ):
         # or easier, with just plain 3-component points:
         ppoint = [x, y, z]
 
-        ppoint_3d = numpy.dot( ppoint * tfm4[0:3, 0:3] ) +  tfm4[3, 0:3]
+        ppoint_3d = numpy.dot( ppoint, tfm4[0:3, 0:3] ) +  tfm4[3, 0:3]
+
+        verts_for_i = hullnet.voronoiverts( i )
     
 
 if __name__ == "__main__":
@@ -413,6 +417,21 @@ if __name__ == "__main__":
         la = gr.layout_circle(dim=3)
         pts = la.coords
 
+    elif len(sys.argv) == 3 and sys.argv[1] == 'spaced':
+
+        sizes = []
+
+        sizefile = sys.argv[2]
+        with open(sizefile) as szf:
+            for line in szf.readlines():
+                ss = line.split('#')[0].split()
+                if len(ss) > 0:
+                    sizes.append( float(ss[0]) )
+
+        spt = spacedpoints.SpacedPoints()
+        spt.seedpoints( sizes )
+        pts = spt.nudgepoints()
+
     elif len(sys.argv) > 1:
         # sphvoronoi.py 
         npts = int(sys.argv[1])
@@ -426,11 +445,12 @@ if __name__ == "__main__":
         print("""Usage: %s <npoints> [<randseed>]
     or  %s ico
     or  %s igraph <npoints>
+    or  %s spaced <file_of_sizes_per_cluster>
     or  ... stream of X Y Z values, one per line ... | %s -
     Constructs a set of points on the unit sphere,
     computes their Voronoi tessellation,
     writes "voronoi.speck", a partiview file with clumps of points for the vertices
-    and arcs of points for the voronoi cell surrounding each vertex.""" % ((sys.argv[0],)*4))
+    and arcs of points for the voronoi cell surrounding each vertex.""" % ((sys.argv[0],)*5))
         sys.exit(1)
 
 
