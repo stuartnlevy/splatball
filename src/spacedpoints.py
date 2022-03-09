@@ -25,6 +25,8 @@ class SpacedPoints(object):
 
         self.curxy = None
 
+        self.nearthresh = 0.5
+
         self.reportrate = 0
 
     def bestxyz(self):
@@ -36,7 +38,8 @@ class SpacedPoints(object):
     def nudgepoints(self):
         try:
             # I can't get the minimizer (global or local) to stop when I want it to, so the minme() function keeps a count and raises a GoodEnoughException.
-            results = scipy.optimize.basinhopping( SpacedPoints.minme, self.curxy, minimizer_kwargs=dict(method='bfgs', args=(self,)), niter=2 )
+            #results = scipy.optimize.basinhopping( SpacedPoints.minme, self.curxy, minimizer_kwargs=dict(method='bfgs', args=(self,)), niter=2 )
+            results = scipy.optimize.basinhopping( SpacedPoints.minme, self.curxy, minimizer_kwargs=dict(args=(self,)), niter=2 )
 
         except GoodEnoughException:
             # timed out - use the best we've found so far
@@ -97,14 +100,14 @@ class SpacedPoints(object):
         xyzpts = self.ster2sph( xypts )
 
         #nearthresh = -0.2 # points for which dot-product < thresh are too far away to be counted
-        nearthresh = -1.0 # points for which dot-product < thresh are too far away to be counted
+        # nearthresh = 0.5 # points for which dot-product < thresh are too far away to be counted
         
         def term( w, p0, otherp, otherw ):
             e = 0
             for p, ww in zip(otherp, otherw):
                 near = numpy.dot(p0,p)
-                if near > nearthresh:
-                    e += ww * (near - nearthresh) / tfm.mag( p - p0 )
+                if near > self.nearthresh:
+                    e += ww * (near - self.nearthresh) / tfm.mag( p - p0 )
             return e*w
 
         ppole = numpy.array([0,0,-1]) 
