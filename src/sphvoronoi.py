@@ -387,7 +387,15 @@ if __name__ == "__main__":
 
     ii = 1
 
-    if len(sys.argv)==2 and sys.argv[1].startswith("ico"):
+    outname = "voronoi.speck"  # unless overridden below
+
+    while ii < len(sys.argv) and sys.argv[ii][0] == '-' and len(sys.argv[ii])>1:
+        opt = sys.argv[ii]; ii += 1
+        if opt == '-o':
+            outname = sys.argv[ii]; ii += 1
+
+
+    if ii+1 == len(sys.argv) and sys.argv[ii].startswith("ico"):
 
         # default: vertices of a regular icosahedron
         spts = """   0                        0                        1.                  # 0
@@ -406,22 +414,22 @@ if __name__ == "__main__":
         pts = [  [float(s) for s in l.split('#')[0].split()]  for l in spts.split('\n') ]
         # now pts is a list of 3-element lists
 
-    elif len(sys.argv) == 2 and sys.argv[1] == '-':
+    elif ii+1 == len(sys.argv) and sys.argv[ii] == '-':
         pts = readpts( sys.stdin )
 
-    elif len(sys.argv) == 3 and sys.argv[1] == 'igraph':
+    elif ii+2 == len(sys.argv) and sys.argv[ii] == 'igraph':
 
-        npts = int(sys.argv[2])
+        npts = int(sys.argv[ii+1])
         
         gr = igraph.Graph.Full(npts)
         la = gr.layout_circle(dim=3)
         pts = la.coords
 
-    elif len(sys.argv) == 3 and sys.argv[1] == 'spaced':
+    elif ii+2 == len(sys.argv) and sys.argv[ii] == 'spaced':
 
         sizes = []
 
-        sizefile = sys.argv[2]
+        sizefile = sys.argv[ii+1]
         with open(sizefile) as szf:
             for line in szf.readlines():
                 ss = line.split('#')[0].split()
@@ -432,17 +440,17 @@ if __name__ == "__main__":
         spt.seedpoints( sizes )
         pts = spt.nudgepoints()
 
-    elif len(sys.argv) > 1:
+    elif ii < len(sys.argv):
         # sphvoronoi.py 
-        npts = int(sys.argv[1])
-        seed = int(sys.argv[2]) if len(sys.argv)>2 else 314159
+        npts = int(sys.argv[ii])
+        seed = int(sys.argv[ii+1]) if ii+1<=len(sys.argv) else 314159
 
         numpy.random.seed( seed )
         pts = randS2(npts)
 
 
     else:
-        print("""Usage: %s <npoints> [<randseed>]
+        print("""Usage: %s [-o outname.speck] <npoints> [<randseed>]
     or  %s ico
     or  %s igraph <npoints>
     or  %s spaced <file_of_sizes_per_cluster>
@@ -454,4 +462,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
 
-    voronoifaces( pts, diagfile="voronoi.speck" )
+    voronoifaces( pts, diagfile=outname )
