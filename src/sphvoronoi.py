@@ -348,8 +348,8 @@ def readpts( infile ):
     pts = []
     for l in infile.readlines():
         ss = l.split('#')[0].split()
-        if len(ss) == 3:
-            pts.append( [float(s) for s in ss] )
+        if len(ss) >= 3:
+            pts.append( [float(s) for s in ss[0:3]] )
     return numpy.array(pts)
 
 ###
@@ -425,6 +425,11 @@ if __name__ == "__main__":
         la = gr.layout_circle(dim=3)
         pts = la.coords
 
+    elif ii+2 == len(sys.argv) and sys.argv[ii] == 'points':
+
+        with open(sys.argv[ii+1]) as inf:
+            pts = readpts( inf )
+
     elif ii+2 == len(sys.argv) and sys.argv[ii] == 'spaced':
 
         sizes = []
@@ -454,11 +459,13 @@ if __name__ == "__main__":
     or  %s ico
     or  %s igraph <npoints>
     or  %s spaced <file_of_sizes_per_cluster>
+    or  %s points pointsfile.dat
     or  ... stream of X Y Z values, one per line ... | %s -
     Constructs a set of points on the unit sphere,
     computes their Voronoi tessellation,
     writes "voronoi.speck", a partiview file with clumps of points for the vertices
-    and arcs of points for the voronoi cell surrounding each vertex.""" % ((sys.argv[0],)*5))
+    and arcs of points for the voronoi cell surrounding each vertex.
+    With "points", reads the points from a file: one x y z point per line, space-separated.""" % ((sys.argv[0],)*6))
         sys.exit(1)
 
 
