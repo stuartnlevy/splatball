@@ -148,7 +148,7 @@ if __name__ == "__main__":
         sizes = numpy.array(sizes)
         return sizes
 
-    def snappoints(outname, xyzpts, msg=''):
+    def snappoints(outname, xyzpts, sizes, msg=''):
 
         print("# Writing to ", outname)
         with open(outname, 'w') as outf:
@@ -178,7 +178,17 @@ if __name__ == "__main__":
 
             print("### ### ###", file=outf, flush=True)
 
+    def savepoints(outdat, xyzpts, sizes):
+        with open(outdat, 'w') as outf:
+            for xyz, siz in zip(xyzpts, sizes):
+                print("%g %g %g" % tuple(xyz), "%g" % siz, file=outf)
 
+
+    if len(sys.argv) <= 1:
+        print("Usage: %s filename.sizes" % sys.argv[0], file=sys.stderr)
+        print("Reads a list of cluster sizes, one per line", file=sys.stderr)
+        print("Writes to filename.speck (partiview graphics) and filename.dat (table of x y z clustersize)", file=sys.stderr)
+        sys.exit(1)
 
     ## Read table of sizes
     sizes = readsizes( sys.argv[1] )
@@ -192,4 +202,7 @@ if __name__ == "__main__":
     xyzpts = spt.nudgepoints()
 
     ### Emit points
-    snappoints( sys.argv[1]+'.speck', xyzpts )
+    outstem = sys.argv[1].replace('.sizes','')
+    snappoints( outstem+'.speck', xyzpts, sizes )
+    print("Saving points (x y z size) to %s.dat" % outstem)
+    savepoints( outstem+'.dat', xyzpts, sizes )
